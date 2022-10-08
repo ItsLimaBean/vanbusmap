@@ -12,6 +12,8 @@ class GTFSTable {
         this.requestId = requestId;
     }
 
+    // TODO: Should instead return a promise that resolves when 
+    // "end" is called. Should this replace the finishCallback?
     decode = async () => {
         let firstRowDecoded = false;
         this.nodeStream.pipe(new AutoDetectDecoderStream({ defaultEncoding: "1255" }))
