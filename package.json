@@ -1,0 +1,28 @@
+{
+  "name": "vanbusmap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itslimabean/vanbusmap.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/itslimabean/vanbusmap/issues"
+  },
+  "homepage": "https://github.com/itslimabean/vanbusmap#readme",
+  "dependencies": {
+    "autodetect-decoder-stream": "^2.0.2",
+    "cors": "^2.8.5",
+    "csv-reader": "^1.0.9",
+    "express": "^4.18.1",
+    "jszip": "^3.10.1",
+    "nodemon": "^2.0.20"
+  }
+}
