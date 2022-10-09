@@ -2,9 +2,9 @@ const https = require("https");
 class FileDownloader {
     
     // Downloads the specified url and returns a Buffer
-    download = (url) => {
+    download = (url, headers = {}) => {
         return new Promise((resolve, reject) => {
-            https.get(url, (res) => {
+            https.get(url, { headers: headers }, (res) => {
                 const rawChunk = [];
 
                 res.on("data", (chunk) => rawChunk.push(chunk));

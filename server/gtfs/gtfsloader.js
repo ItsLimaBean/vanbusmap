@@ -1,6 +1,9 @@
 const {FileDownloader } = require("./filedownloader");
 const JSZip = require("jszip");
 const { GTFSCalendarTable } = require("./gtfstables/calendartable");
+const { GTFSStopTimesTable } = require("./gtfstables/stoptimestable");
+const { GTFSStopsTable } = require("./gtfstables/stopstable");
+const { GTFSRoutesTable } = require("./gtfstables/routestable");
 
 
 class GTFSLoader {
@@ -8,7 +11,12 @@ class GTFSLoader {
         this.gtfsUrl = "https://tlebtsprd01startti.blob.core.windows.net/gtfs/google_transit.zip";
         this.gtfsUrlPrevious = "https://gtfs-static.translink.ca/gtfs/History/{DATE_PARAM}/google_transit.zip"
         this.fileDownloader = new FileDownloader();
-        this.gtfsTables = { "calendar.txt": GTFSCalendarTable };
+        this.gtfsTables = {
+            "calendar.txt": GTFSCalendarTable,
+            "stop_times.txt": GTFSStopTimesTable,
+            "stops.txt": GTFSStopsTable,
+            "routes.txt": GTFSRoutesTable
+        };
         
         // Used to ensure we are using the most up to date gtfs request.
         // There's a better method, aka awaiting for the calendar checks before parsing other
