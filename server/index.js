@@ -47,8 +47,13 @@ app.listen(PORT, async () => {
 
 app.get("/buses", async (req, res) => {
     const builder = new BusBuilder(realtimeTranslink, null);
+    await builder.tryUpdate();
 
-    res.send(await builder.buildBuses());
+    if (parseFloat(req.query?.time) !== realtimeTranslink.lastFetch) {
+        res.send({buses: await builder.buildBuses(), timestamp: realtimeTranslink.lastFetch});
+    } else {
+        res.send({timestamp: realtimeTranslink.lastFetch});
+    }
 });
 
 BusIcon(app);

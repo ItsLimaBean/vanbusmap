@@ -10,6 +10,7 @@
     let mapElement: HTMLElement;
     let markersCanvas: L.MarkersCanvas;
 
+    let busUpdateTime = -1;
     let buses: Array<BusData> = [];
 
     $: if (markersCanvas && buses) {
@@ -23,7 +24,11 @@
     }
     
     const updateBuses = async () => {
-        buses = await (await fetch("/api/buses")).json();
+        const busData = await (await fetch(`/api/buses?time=${busUpdateTime}`)).json();
+        busUpdateTime = busData.timestamp;
+        if (busData.buses) {
+            buses = busData.buses;
+        }
         console.log("updatedbuses!");
     }
 

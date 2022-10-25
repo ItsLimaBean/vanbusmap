@@ -6,9 +6,11 @@ class BusBuilder {
         this.googleRealtime = googleRealtime;   
     }
 
-    buildBuses = async () => {
+    tryUpdate = async() => {
         await this.translinkRealtime.tryUpdate();
+    }
 
+    buildBuses = async () => {
         const builtBuses = [];
         for (const bus of this.translinkRealtime.getBuses()) {
             builtBuses.push(new BusData(bus).json());
