@@ -14,8 +14,15 @@ class Realtime {
         let updated = false;
         const currentTime = new Date().getTime() / 1000;
         if (currentTime - this.lastFetch >= this.cacheTime) {
-            await this.fetchData();
-            updated = true;
+            this.lastFetch = currentTime;
+            
+            try {
+                await this.fetchData();
+                updated = true;
+            } catch (err) {
+                console.log("Realtime fetchData error!");
+                console.error(err);
+            }
         }
 
         return updated;
@@ -24,7 +31,6 @@ class Realtime {
     fetchData = async () => {}
 
     getBuses = () => {
-        console.log(this.buses)
         return this.buses;
     }
 }

@@ -15,8 +15,12 @@ class TranslinkRealtime extends Realtime {
         const realtimeBuffer = await this.downloader.download(this.translinkUrl, { "content-type": "application/JSON" });
 
         const realtimeJson = realtimeBuffer.toString("utf8");
+        const realtimeData = JSON.parse(realtimeJson);
+        if (realtimeData["Code"] !== undefined) {
+            throw new Error(`Code: ${realtimeData["Code"]} | ${realtimeData["Message"]}`);
+        }
 
-        this.buses = JSON.parse(realtimeJson);
+        this.buses = realtimeData;
     }
 }
 
