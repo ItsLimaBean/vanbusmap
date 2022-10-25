@@ -3,6 +3,7 @@ const cors = require("cors");
 const { config } = require("dotenv");
 const { TranslinkRealtime } = require("./realtime/translink");
 const { BusBuilder } = require("./bus/busbuilder");
+const { BusIcon } = require("./api/routes/busicon");
 config();
 
 const realtimeTranslink = new TranslinkRealtime();
@@ -28,4 +29,6 @@ app.get("/buses", async (req, res) => {
     const builder = new BusBuilder(realtimeTranslink, null);
 
     res.send(await builder.buildBuses());
-})
+});
+
+BusIcon(app);

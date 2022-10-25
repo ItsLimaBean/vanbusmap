@@ -8,7 +8,6 @@ class BusBuilder {
 
     buildBuses = async () => {
         await this.translinkRealtime.tryUpdate();
-        await this.translinkRealtime.fetchData();
 
         const builtBuses = [];
         for (const bus of this.translinkRealtime.getBuses()) {

@@ -13,9 +13,7 @@ class BusData {
     }
 
     json = () => {
-        return {
-            translink: this.translinkData
-        }
+        return this.translinkData;
     }
 }
 
