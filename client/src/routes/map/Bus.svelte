@@ -21,7 +21,7 @@
       iconAnchor: [10, 9],
     });
 
-        marker = L.marker([busDetails.latitude, busDetails.longitude], {icon: icon});
+        marker = L.marker([busDetails.latitude, busDetails.longitude], {icon: icon}).bindPopup("Vehicle id: " + busDetails.vehicleId);
         markersCanvas.addMarker(marker);
     });
 
