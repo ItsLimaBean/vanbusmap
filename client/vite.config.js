@@ -1,7 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import type { UserConfig } from 'vite';
 
-const config: UserConfig = {
+const config = {
 	plugins: [sveltekit()],
 	server: {
 		port: 3000,
@@ -10,9 +9,6 @@ const config: UserConfig = {
 				target: "http://localhost:3001/",
 				secure: false,
 				changeOrigin: false,
-				rewrite: (path) => {
-					return path.replace("/api", "");
-				}
 			}
 		}
 	},

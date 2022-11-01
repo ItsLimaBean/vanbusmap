@@ -3,7 +3,7 @@ const { BusData } = require("./busdata");
 class BusBuilder {
     constructor(translinkRealtime, googleRealtime) {
         this.translinkRealtime = translinkRealtime;
-        this.googleRealtime = googleRealtime;   
+        this.googleRealtime = googleRealtime;
     }
 
     tryUpdate = async() => {
@@ -17,6 +17,16 @@ class BusBuilder {
         }
 
         return builtBuses;
+    }
+
+    buildBus = async (busId) => {
+        const buses = this.translinkRealtime.getBuses();
+        for (const bus of buses) {
+            if (bus["VehicleNo"] == busId) {
+                return new BusData(bus).json();
+            }
+        }
+        return null;
     }
 }
 

@@ -1,17 +1,16 @@
-<script lang="ts">
+<script>
     import { onMount, onDestroy, setContext } from "svelte";
-    import type { BusData } from "./BusData";
     import L from "leaflet";
     import "leaflet-markers-canvas";
-    import Bus from "./Bus.svelte";
+    import BusMarker from "./BusMarker.svelte"
 
 
-    let map: L.Map;
-    let mapElement: HTMLElement;
-    let markersCanvas: L.MarkersCanvas;
+    let map;
+    let mapElement;
+    let markersCanvas;
 
+    let buses = [];
     let busUpdateTime = -1;
-    let buses: Array<BusData> = [];
 
     $: if (markersCanvas && buses) {
         // We use a timeout to make sure that all buses have updated their positions
@@ -22,7 +21,7 @@
         
         
     }
-    
+
     const updateBuses = async () => {
         const busData = await (await fetch(`/api/buses?time=${busUpdateTime}`)).json();
         busUpdateTime = busData.timestamp;
@@ -32,10 +31,10 @@
         console.log("updatedbuses!");
     }
 
-    onMount(async () => {
-            map = L.map(mapElement);
+    onMount(() => {
+        map = L.map(mapElement);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             map.setView([49.2490416, -122.9850604], 14)
@@ -45,7 +44,6 @@
             
         
             updateBuses();
-        
     });
 
     onDestroy(() => {
@@ -62,14 +60,13 @@
             return markersCanvas;
         }
     });
-
 </script>
 
 <main>
     <button on:click={updateBuses}>UPDATE</button>
     <div bind:this={mapElement}></div>
     {#each buses as bus, index (bus.vehicleId)}
-        <Bus busDetails={bus}></Bus>
+        <BusMarker busDetails={bus}></BusMarker>
     {/each}
 </main>
 

@@ -1,3 +1,5 @@
+const { getFleetModel } = require("./fleet");
+
 class BusData {
     constructor(translinkData) {
         this.translinkData = {
@@ -8,7 +10,8 @@ class BusData {
             longitude: translinkData["Longitude"],
             destination: translinkData["Destination"],
             updatedAt: translinkData["RecordedTime"],
-            pattern: translinkData["Pattern"].slice(0, 3)
+            pattern: translinkData["Pattern"].slice(0, 3),
+            model: getFleetModel(translinkData["VehicleNo"])
         }
     }
 

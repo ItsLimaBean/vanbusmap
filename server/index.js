@@ -11,6 +11,7 @@ config();
 const realtimeTranslink = new TranslinkRealtime();
 const PORT = process.env.PORT || 3001;
 const app = express();
+const busBuilder = new BusBuilder(realtimeTranslink, null);
 
 app.use(expressWinston.logger({
     transports: [
@@ -45,15 +46,19 @@ app.listen(PORT, async () => {
     }
 });
 
-app.get("/buses", async (req, res) => {
-    const builder = new BusBuilder(realtimeTranslink, null);
-    await builder.tryUpdate();
+app.get("/api/buses", async (req, res) => {
+    await busBuilder.tryUpdate();
 
     if (parseFloat(req.query?.time) !== realtimeTranslink.lastFetch) {
-        res.send({buses: await builder.buildBuses(), timestamp: realtimeTranslink.lastFetch});
+        res.send({buses: await busBuilder.buildBuses(), timestamp: realtimeTranslink.lastFetch});
     } else {
         res.send({timestamp: realtimeTranslink.lastFetch});
     }
+});
+
+app.get("/api/bus/:busId", async (req, res) => {
+    await busBuilder.tryUpdate();
+    res.send({ bus: await busBuilder.buildBus(req.params["busId"]) });
 });
 
 BusIcon(app);
