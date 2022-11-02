@@ -4,6 +4,7 @@ const { config } = require("dotenv");
 const { TranslinkRealtime } = require("./realtime/translink");
 const { BusBuilder } = require("./bus/busbuilder");
 const { BusIcon } = require("./api/routes/busicon");
+const { KMLRoute } = require("./api/routes/kml");
 const expressWinston = require('express-winston');
 const winston = require("winston");
 config();
@@ -62,3 +63,4 @@ app.get("/api/bus/:busId", async (req, res) => {
 });
 
 BusIcon(app);
+KMLRoute(app);

@@ -2,7 +2,7 @@ const { Realtime } = require("./realtime");
 
 class TranslinkRealtime extends Realtime {
     constructor() {
-        super(120);
+        super(10);
 
         if (!process.env.TRANSLINK_API) {
             throw Error("TRANSLINK_API key not set!");

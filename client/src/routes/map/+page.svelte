@@ -1,13 +1,16 @@
 <script>
-    import { onMount, onDestroy, setContext } from "svelte";
+    import { onMount } from "svelte";
     import L from "leaflet";
     import "leaflet-markers-canvas";
-    import BusMarker from "./BusMarker.svelte"
+    import "leaflet-plugins/layer/vector/KML"
+    import BusMarker from "../BusMarker.svelte"
+    import LeafletMap from "../LeafletMap.svelte";
 
 
     let map;
-    let mapElement;
     let markersCanvas;
+    let kml;
+    const kmlCache = {};
 
     let buses = [];
     let busUpdateTime = -1;
@@ -18,8 +21,14 @@
         setTimeout(() => {
             markersCanvas.redraw();
         }, 1)
-        
-        
+    }
+
+    $: if (map) {
+        console.log("map changgged!");
+    }
+
+    $: if (markersCanvas) {
+        console.log("canvas chganged!");
     }
 
     const updateBuses = async () => {
@@ -32,49 +41,40 @@
     }
 
     onMount(() => {
-        map = L.map(mapElement);
+        map.on("popupopen", (event) => {
+            const route = event.popup.route;
+            if (route) {
+                kml?.remove();
+                if (kmlCache[route] !== undefined) {
+                    kml = kmlCache[route].addTo(map);
+                } else {
+                    kml = kmlCache[route] = new L.KML(`/api/kml/${route}.kml`, { async: true}).addTo(map);
+                }
+            }
+        });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            map.setView([49.2490416, -122.9850604], 14)
-
-            markersCanvas = new L.MarkersCanvas();
-            markersCanvas.addTo(map);
-            
+        map.on("popupclose", (event) => {
+            kml?.remove();
+        });
         
-            updateBuses();
-    });
-
-    onDestroy(() => {
-        if (map) {
-            map.remove();
-        }
-    });
-
-    setContext("leaflet", {
-        getMap: () => {
-            return map;
-        },
-        getMarkersCanvas: () => {
-            return markersCanvas;
-        }
+        updateBuses();
     });
 </script>
 
 <main>
     <button on:click={updateBuses}>UPDATE</button>
-    <div bind:this={mapElement}></div>
-    {#each buses as bus, index (bus.vehicleId)}
-        <BusMarker busDetails={bus}></BusMarker>
+    <button on:click={() => buses = []}>REMOVE</button>
+
+    {#each buses as bus (bus.vehicleId)}
+        <BusMarker canvas={markersCanvas} busDetails={bus}></BusMarker>
     {/each}
+    <div style="height: 100vh;">
+        <LeafletMap bind:map={map} bind:markersCanvas={markersCanvas} view={[49.2490416, -122.9850604]} zoom={14}></LeafletMap>
+    </div>
+
 </main>
 
 <style>
-    @import "leaflet/dist/leaflet.css";
-    main div {
-        height: 100vh;
-    }
 
     :global(body) {
         margin: 0;
