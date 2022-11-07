@@ -4,24 +4,27 @@ const { GTFSCalendarTable } = require("./gtfstables/calendartable");
 const { GTFSStopTimesTable } = require("./gtfstables/stoptimestable");
 const { GTFSStopsTable } = require("./gtfstables/stopstable");
 const { GTFSRoutesTable } = require("./gtfstables/routestable");
+const { GTFSTripsTable } = require("./gtfstables/tripstable");
 
 
 class GTFSLoader {
-    constructor() {
+    constructor(db) {
         this.gtfsUrl = "https://tlebtsprd01startti.blob.core.windows.net/gtfs/google_transit.zip";
         this.gtfsUrlPrevious = "https://gtfs-static.translink.ca/gtfs/History/{DATE_PARAM}/google_transit.zip"
         this.fileDownloader = new FileDownloader();
         this.gtfsTables = {
-            "calendar.txt": GTFSCalendarTable,
-            "stop_times.txt": GTFSStopTimesTable,
             "stops.txt": GTFSStopsTable,
-            "routes.txt": GTFSRoutesTable
+            "routes.txt": GTFSRoutesTable,
+            "trips.txt": GTFSTripsTable,
+            "stop_times.txt": GTFSStopTimesTable,
+
         };
         
         // Used to ensure we are using the most up to date gtfs request.
         // There's a better method, aka awaiting for the calendar checks before parsing other
         // gtfs data, but im lazy /shrug
         this.requestId = 0;
+        this.db = db;
     }
 
     getGTFSUrl = (useLastWeek) => {
@@ -51,15 +54,22 @@ class GTFSLoader {
 
         const zipData = await zip.loadAsync(gtfsBuffer);
 
-        for (const file in this.gtfsTables) {
+        const calendar = new GTFSCalendarTable(this.db, zipData.files["calendar.txt"].nodeStream(), this.onGTFSInstanceParsed, this.requestId)
+        await calendar.decode();
+        if (!calendar.currentSheet) {
+            console.log("Detected early sheet...");
+            return await this.updateGTFS(true);
+        }
+
+        await Promise.all(Object.keys(this.gtfsTables).map((file) => {
             const zipFile = zipData.files[file];
             if (zipFile) {
                 console.log(`Decoding zip file ${file}...`);
                 const table = this.gtfsTables[file];
-                const tableInstance = new table(zipFile.nodeStream(), this.onGTFSInstanceParsed, this.requestId);
-                await tableInstance.decode();
+                const tableInstance = new table(this.db, zipFile.nodeStream(), this.onGTFSInstanceParsed, this.requestId);
+                return tableInstance.decode();
             }
-        }
+        }));
     }
 
     updateGTFS = async (useLastWeek = false) => {
@@ -70,6 +80,7 @@ class GTFSLoader {
     }
 
     onGTFSInstanceParsed = async (instance, classId) => {
+        throw new Error("Deprecated event.");
         if (instance.requestId !== this.requestId) {
             console.log("Old GTFS data parsed... - WARNING", classId);
             return;
@@ -83,6 +94,26 @@ class GTFSLoader {
                 }    
             break;
         }
+    }
+
+    shouldUpdate = async () => {
+        const date = new Date(new Date().toLocaleString("en-US", {
+            timeZone: "America/Vancouver",
+        }));
+        let day = date.getDate();
+        let month = date.getMonth();
+        let year = date.getFullYear();
+        if (day < 10) {
+            day = '0' + day;
+        }
+        if (month < 10) {
+            month = `0${month}`;
+        }
+        const dateN = parseInt(`${year}${month}${day}`);
+        
+        const stmt = this.db.prepare("SELECT sheet_id FROM sheets WHERE start_date < ? AND end_date > ?;");
+        const result = stmt.get(dateN, dateN);
+        return result === undefined;
     }
 }
 

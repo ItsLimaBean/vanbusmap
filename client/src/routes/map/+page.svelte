@@ -69,7 +69,7 @@
         <BusMarker canvas={markersCanvas} busDetails={bus}></BusMarker>
     {/each}
     <div style="height: 100vh;">
-        <LeafletMap bind:map={map} bind:markersCanvas={markersCanvas} view={[49.2490416, -122.9850604]} zoom={14}></LeafletMap>
+        <LeafletMap bind:map={map} bind:markersCanvas={markersCanvas} view={[49.2490416, -122.9850604]} zoom={12}></LeafletMap>
     </div>
 
 </main>

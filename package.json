@@ -19,6 +19,7 @@
   "homepage": "https://github.com/itslimabean/vanbusmap#readme",
   "dependencies": {
     "autodetect-decoder-stream": "^2.0.2",
+    "better-sqlite3": "^7.6.2",
     "cors": "^2.8.5",
     "csv-reader": "^1.0.9",
     "dotenv": "^16.0.3",

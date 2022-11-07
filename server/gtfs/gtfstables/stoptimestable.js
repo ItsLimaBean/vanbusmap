@@ -1,14 +1,13 @@
 const { GTFSTable } = require("./gtfstable");
 
 class GTFSStopTimesTable extends GTFSTable {
-    constructor(nodeStream, finishCallback, requestId) {
-        super(nodeStream, finishCallback, requestId, "stop_times");
+    constructor(db, nodeStream, finishCallback, requestId) {
+        super(db, nodeStream, finishCallback, requestId, "stop_times");
 
         this.tripSeqInfo = {};
     }
 
-    finishCallback = async () => {
-        console.log("Finished decoding StopTimes.");
+    decodeFinish = async () => {
 
         const trip_id = this.getColumn("trip_id");
         const stop_seq = this.getColumn("stop_sequence");
@@ -16,18 +15,19 @@ class GTFSStopTimesTable extends GTFSTable {
         const arrival_time = this.getColumn("arrival_time");
         const departure_time = this.getColumn("departure_time");
 
-        for (const row of this.rows) {
-            const tripId = row[trip_id];
-            if (!this.tripSeqInfo[tripId]) {
-                this.tripSeqInfo[tripId] = {};
-            }
-            
-            this.tripSeqInfo[tripId][row[stop_seq]] = {
+        const stmt = this.db.prepare("INSERT INTO stop_times (trip_id, stop_id, sequence, arrival_time, departure_time) VALUES (@tripId, @stopId, @sequence, @arrival, @departure)");
+    
+        const insert = this.db.transaction((rows) => {
+            for (const row of rows) stmt.run({
+                tripId: row[trip_id],
                 stopId: row[stop_id],
-                arrival: parseInt(row[arrival_time].replaceAll(":", "")),
-                departure: parseInt(row[departure_time].replaceAll(":", "")),
-            }
-        }
+                sequence: row[stop_seq],
+                arrival: row[arrival_time],
+                departure: row[departure_time]
+            })
+        });
+
+        insert(this.rows);
     }
 }
 

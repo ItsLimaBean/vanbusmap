@@ -7,12 +7,23 @@ const { BusIcon } = require("./api/routes/busicon");
 const { KMLRoute } = require("./api/routes/kml");
 const expressWinston = require('express-winston');
 const winston = require("winston");
+const { connect, create } = require("./database/database");
+const { StopTimesModel } = require("./database/models/stoptimes");
+
+process.env.TZ = "America/Vancouver";
+
 config();
+
+console.log("Connecting to Database.");
+const db = connect("./test_db.db");
+create(db);
+console.log("Connected to Database.");
+
 
 const realtimeTranslink = new TranslinkRealtime();
 const PORT = process.env.PORT || 3001;
 const app = express();
-const busBuilder = new BusBuilder(realtimeTranslink, null);
+const busBuilder = new BusBuilder(db, realtimeTranslink, null);
 
 app.use(expressWinston.logger({
     transports: [
@@ -38,13 +49,19 @@ app.listen(PORT, async () => {
     console.log(`Van Bus Map running on port ${PORT}`);
     const { GTFSLoader}  = require("./gtfs/gtfsloader");
 
-    let loader = new GTFSLoader();
-    try {
-        await loader.updateGTFS();
-    } catch (err) {
-        console.log("!!!Unable to laod GTFS Data!!!");
-        console.error(err);
+    let loader = new GTFSLoader(db);
+    if (await loader.shouldUpdate()) {
+        try {
+            await loader.updateGTFS();
+            console.log("Updated GTFS Data.");
+        } catch (err) {
+            console.log("!!!Unable to laod GTFS Data!!!");
+            console.error(err);
+        }
+    } else {
+        console.log("GTFS Data present already.");
     }
+    
 });
 
 app.get("/api/buses", async (req, res) => {
@@ -55,6 +72,13 @@ app.get("/api/buses", async (req, res) => {
     } else {
         res.send({timestamp: realtimeTranslink.lastFetch});
     }
+});
+
+const test = new StopTimesModel(db);
+app.get("/api/test/:id", async (req, res) => {
+    const data = await test.run(req.params["id"], req.params["id"]);
+    console.log(data)
+    res.send(data);
 });
 
 app.get("/api/bus/:busId", async (req, res) => {

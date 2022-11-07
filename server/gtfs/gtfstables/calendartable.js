@@ -1,8 +1,8 @@
 const { GTFSTable } = require("./gtfstable");
 
 class GTFSCalendarTable extends GTFSTable {
-    constructor(nodeStream, finishCallback, requestId) {
-        super(nodeStream, finishCallback, requestId, "calendar");
+    constructor(db, nodeStream, finishCallback, requestId) {
+        super(db, nodeStream, finishCallback, requestId, "calendar");
         this.currentSheet = false;
         this.startDate = null;
         this.endDate = null;
@@ -15,6 +15,8 @@ class GTFSCalendarTable extends GTFSTable {
         const start_date = this.getColumn("start_date");
         const end_date = this.getColumn("end_date");
 
+        let insertStartDate, insertEndDate;
+
         for (let row of this.rows) {
             if (row[service_id] === "1") {
                 console.log("Found Service Row.");
@@ -24,12 +26,21 @@ class GTFSCalendarTable extends GTFSTable {
 
                 const today = new Date();
                 this.currentSheet = today <= this.endDate && today >= this.startDate;
+
+                insertStartDate = parseInt(row[start_date]);
+                insertEndDate = parseInt(row[end_date]);
+
                 break;
             }
         }
 
         console.log(`Found sheet ranging from ${this.startDate} to ${this.endDate}`);
         console.log(`Is current Sheet? ${this.currentSheet}`);
+
+        if (this.currentSheet) {
+            this.db.prepare("INSERT INTO sheets (start_date, end_date) VALUES(?, ?);")
+                .run(insertStartDate, insertEndDate);
+        }
     }
 
     parseDate = (dateStr) => {

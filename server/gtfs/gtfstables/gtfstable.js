@@ -2,9 +2,10 @@ const CsvReadableStream = require("csv-reader");
 const AutoDetectDecoderStream = require("autodetect-decoder-stream")
 
 class GTFSTable {
-    constructor(nodeStream, finishCallback, requestId, classId) {
+    constructor(db, nodeStream, finishCallback, requestId, classId) {
         this.nodeStream = nodeStream;
 
+        this.db = db;
         this.classId = classId;
         this.headers = [];
         this.rows = [];
@@ -14,26 +15,32 @@ class GTFSTable {
 
     // TODO: Should instead return a promise that resolves when 
     // "end" is called. Should this replace the finishCallback?
-    decode = async () => {
-        let firstRowDecoded = false;
-        this.nodeStream.pipe(new AutoDetectDecoderStream({ defaultEncoding: "1255" }))
-            .pipe(new CsvReadableStream({ parseNumbers: false, parseBooleans: true, trim: true }))
-            .on("data", async (row) => {
-                if (!firstRowDecoded) {
-                    firstRowDecoded = true;
-                    await this.decodeHeader(row);
-                } else {
-                    await this.decodeRow(row);
-                }
-            })
-            .on("end", async () => {
-                // Run our decode finish first since we need to ensure
-                // data has been parsed fully.
-                await this.decodeFinish();
-
-
-                this.finishCallback(this, this.classId);
-            });
+    decode = () => {
+        return new Promise((resolve, reject) => {
+            let firstRowDecoded = false;
+            this.nodeStream.pipe(new AutoDetectDecoderStream({ defaultEncoding: "1255" }))
+                .pipe(new CsvReadableStream({ parseNumbers: false, parseBooleans: true, trim: true }))
+                .on("data", async (row) => {
+                    if (!firstRowDecoded) {
+                        firstRowDecoded = true;
+                        await this.decodeHeader(row);
+                    } else {
+                        await this.decodeRow(row);
+                    }
+                })
+                .on("end", async () => {
+                    // Run our decode finish first since we need to ensure
+                    // data has been parsed fully.
+                    console.log(`Starting decode: ${this.classId}`);
+                    await this.decodeFinish();
+                    console.log(`Finished decode: ${this.classId}`);
+    
+    
+                    resolve();
+                    // this.finishCallback(this, this.classId);
+                });
+        });
+        
     }
 
     decodeRow = async (columns) => {
